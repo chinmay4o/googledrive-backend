@@ -6,6 +6,8 @@ import cors from "cors";
 // import "./db/conn.js";
 
 const app = express();
+app.use(cors());
+
 
 dotenv.config({ path: "./config.env" });
 const PORT = process.env.PORT || 5003;
@@ -24,7 +26,7 @@ const conn = mongoose.connection;
 conn.on("open", () => console.log("Mongodb connected"));
 
 //middler ware
-app.use(cors());
+// app.use(cors());
 app.use(express.json());
 
 // const middleware = (req, res, next) => {};

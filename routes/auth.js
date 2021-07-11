@@ -2,51 +2,55 @@ import express from "express";
 import { Users } from "../models/usersModel.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import authenticate from "../middleware/authenticate.js";
+import cors from "cors";
 // import mongoose from "mongoose";
 
 const router = express.Router();
 
-router
-  .route("/users")
-  .get(async (req, res) => {
-    const user = await Users.find();
-    res.send(user);
-  })
-  .post(async (req, res) => {
-    const { name, email, phone, work, password, cpassword } = req.body;
+router.route("/users").get(async (req, res) => {
+  res.cookie("jwttt", "token");
+  const user = await Users.find();
+  res.send(user);
+});
 
-    if (!name || !email || !phone || !work || !password || !cpassword) {
-      return res.status(422).json({ message: "pls fill all the fields" });
+//================== SignUp route ==================
+router.route("/register").post(async (req, res) => {
+  const { name, email, phone, work, password, cpassword } = req.body;
+
+  if (!name || !email || !phone || !work || !password || !cpassword) {
+    return res.status(422).json({ message: "pls fill all the fields" });
+  }
+  try {
+    const user = await Users.findOne({ email: email });
+
+    if (user) {
+      // return res.status(422).json({ message: "email already exists" });
+      res.status(422);
+      return res.send("email already exists");
+    } else if (password != cpassword) {
+      res.status(422);
+      return res.send("password doesn't match");
+    } else {
+      const userReg = new Users({
+        name,
+        email,
+        phone,
+        work,
+        password,
+        cpassword,
+      });
+
+      await userReg.save();
+      res.send("users successfully registered");
     }
-    try {
-      const user = await Users.findOne({ email: email });
-
-      if (user) {
-        // return res.status(422).json({ message: "email already exists" });
-        res.status(422);
-        return res.send("email already exists");
-      } else if (password != cpassword) {
-        res.status(422);
-        return res.send("password doesn't match");
-      } else {
-        const userReg = new Users({
-          name,
-          email,
-          phone,
-          work,
-          password,
-          cpassword,
-        });
-
-        await userReg.save();
-        res.send("users successfully registered");
-      }
-    } catch (err) {
-      res.send(err.message);
-    }
-  });
+  } catch (err) {
+    res.send(err.message);
+  }
+});
 
 //================== login route ==================
+
 router.route("/login").post(async (req, res) => {
   const { email, password } = req.body;
   try {
@@ -57,25 +61,32 @@ router.route("/login").post(async (req, res) => {
 
     const userLogin = await Users.findOne({ email: email });
 
-    const token = await userLogin.generateAuthToken();
-    console.log(token);
+    if (!userLogin) {
+      return res.status(422);
+    }
 
-    res.cookie("jwt" , token, {
-      
-      expires : new Date(Date.now() + 25892000000),
-      httpOnly : true
-    
+    let token1 = jwt.sign({ _id: userLogin._id }, process.env.SECRET_KEY);
+    userLogin.tokens = userLogin.tokens.concat({ token: token1 });
+    await userLogin.save();
+    // const token = await userLogin.generateAuthToken();
+    console.log(token1);
+
+    // saving tokens n cookies
+    res.cookie("jwttt", token1, {
+      expires: new Date(Date.now() + 25892000000),
+      httpOnly: true
     });
 
     if (userLogin) {
       const verifyPass = await bcrypt.compare(password, userLogin.password);
       if (!verifyPass) {
+        res.status(422);
         res.send("invalid credentials");
       } else {
         res.send("successfull login");
       }
     } else {
-      res.status(400);
+      res.status(422);
       return res.send("invalid details");
     }
   } catch (err) {
@@ -114,4 +125,8 @@ router
     }
   });
 
+router.get("/about", authenticate, (req, res) => {
+  console.log(`Hello my About`);
+  // res.send(req.rootUser);
+});
 export const userRouter = router;
