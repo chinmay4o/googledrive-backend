@@ -9,7 +9,7 @@ import cors from "cors";
 const router = express.Router();
 
 router.route("/users").get(async (req, res) => {
-  res.cookie("jwttt", "token");
+  // res.cookie("jwttt", 123333);
   const user = await Users.find();
   res.send(user);
 });
@@ -65,24 +65,29 @@ router.route("/login").post(async (req, res) => {
       return res.status(422);
     }
 
-    let token1 = jwt.sign({ _id: userLogin._id }, process.env.SECRET_KEY);
-    userLogin.tokens = userLogin.tokens.concat({ token: token1 });
-    await userLogin.save();
-    // const token = await userLogin.generateAuthToken();
-    console.log(token1);
+    // let token1 = jwt.sign({ _id: userLogin._id }, process.env.SECRET_KEY);
+    // userLogin.tokens = userLogin.tokens.concat({ token: token1 });
+    // await userLogin.save();
+    const token = await userLogin.generateAuthToken();
+    console.log(token);
 
     // saving tokens n cookies
-    res.cookie("jwttt", token1, {
-      expires: new Date(Date.now() + 25892000000),
-      httpOnly: true
-    });
-
+  
     if (userLogin) {
       const verifyPass = await bcrypt.compare(password, userLogin.password);
       if (!verifyPass) {
         res.status(422);
         res.send("invalid credentials");
       } else {
+        // res.cookie("jwttt", token1, {
+        //   expires: new Date(Date.now() + 25892000000),
+        //   httpOnly: true
+        // });
+         res.cookie("jwttt", token, {
+          expires: new Date(Date.now() + 2589200),
+          httpOnly: true
+        });
+        console.log("cookiees");
         res.send("successfull login");
       }
     } else {

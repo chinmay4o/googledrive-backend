@@ -37,16 +37,16 @@ const userSchema = new mongoose.Schema({
   ],
 });
 
-// userSchema.methods.generateAuthToken = async function () {
-//   try {
-//     let token1 = jwt.sign({ _id: this._id }, process.env.SECRET_KEY);
-//     this.tokens = this.tokens.concat({ token: token1 });
-//     await this.save();
-//     return token1;
-//   } catch (err) {
-//     console.log(err);
-//   }
-// };
+userSchema.methods.generateAuthToken = async function () {
+  try {
+    let token1 = jwt.sign({ _id: this._id }, process.env.SECRET_KEY);
+    this.tokens = this.tokens.concat({ token: token1 });
+    await this.save();
+    return token1;
+  } catch (err) {
+    console.log(err);
+  }
+};
 
 //middleware
 userSchema.pre("save", async function (next) {
