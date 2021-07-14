@@ -2,7 +2,7 @@ import express from "express";
 import { Users } from "../models/usersModel.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import authenticate from "../middleware/authenticate.js";
+import {authenticate} from "../middleware/authenticate.js";
 import cors from "cors";
 // import mongoose from "mongoose";
 
@@ -79,10 +79,6 @@ router.route("/login").post(async (req, res) => {
         res.status(422);
         res.send("invalid credentials");
       } else {
-        // res.cookie("jwttt", token1, {
-        //   expires: new Date(Date.now() + 25892000000),
-        //   httpOnly: true
-        // });
          res.cookie("jwttt", token, {
           expires: new Date(Date.now() + 2589200),
           httpOnly: true
@@ -132,6 +128,8 @@ router
 
 router.get("/about", authenticate, (req, res) => {
   console.log(`Hello my About`);
-  // res.send(req.rootUser);
+  res.send(req.rootUser);
+  // console.log(res);
+  // console.log(req);
 });
 export const userRouter = router;
